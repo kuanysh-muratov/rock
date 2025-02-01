@@ -1,94 +1,78 @@
-function getComputerChoice(){
-    let choiceNumber=Math.floor(Math.random()*3)+1;
-    if(choiceNumber===1)
-        return "rock";
-    else if(choiceNumber===2)
-        return "paper";
-    return "scissors";
+function getComputerChoice() {
+    let choiceNumber = Math.floor(Math.random() * 3) + 1;
+    if (choiceNumber === 1) return "rock";
+    else if (choiceNumber === 2) return "paper";
+    else if (choiceNumber === 3) return "scissors";
 }
 
 
-function getHumanChoice(){
-    let humanChoice;
-    while(true){
-        humanChoice=prompt("Rock or Paper or Scissors?");
-        if(!humanChoice)
-            continue;
-        humanChoice=humanChoice.trim().toLowerCase();
-        if(humanChoice==="rock" || humanChoice==="paper" || humanChoice==="scissors")
-            return humanChoice;
-    }
+// draw -> decision=0.  human win -> decision=1.  human loss -> decision=-1.
+function determineWinner(humanChoice, computerChoice) {
+    if (humanChoice === computerChoice) return 0;
+    else if (humanChoice === "rock") return computerChoice === "paper" ? -1 : 1;
+    else if (humanChoice === "paper") return computerChoice === "scissors" ? -1 : 1;
+    return computerChoice === "rock" ? -1 : 1;
 }
 
 
-function createMessage(winnerChoice, loserChoice, decision){
+function printMessage(winnerChoice, loserChoice, decision) {
     let message;
-    if(decision===1)
-        message=`You win! ${winnerChoice} beats ${loserChoice}!`;
-    else if(decision===-1)
-        message=`You lose! ${winnerChoice} beats ${loserChoice}!`;
-    else
-        message=`Draw! Both chose ${winnerChoice}!`;
-    
-    console.log(message);
+    if (decision === 1) message = `You win! ${winnerChoice} beats ${loserChoice}!`;
+    else if (decision === -1) message = `You lose! ${winnerChoice} beats ${loserChoice}!`;
+    else message = `Draw! Both chose ${winnerChoice}!`;
+    document.querySelector("h3.decision").textContent = message;
 }
 
 
-function determineWinner(humanChoice, computerChoice){
-    let decision;
-    if(humanChoice===computerChoice)
-        decision=0;
-    else{
-        if(humanChoice==="rock"){
-            if(computerChoice==="paper")
-                decision=-1;
-            else
-                decision=1;
-        }
-        else if(humanChoice==="paper"){
-            if(computerChoice==="scissors")
-                decision=-1
-            else
-                decision=1;
-        }
-        else{
-            if(computerChoice==="rock")
-                decision=-1;
-            else
-                decision=1;
-        }
-    }
-    return decision;
-}
+function playGame() {
+    let rounds = 0, humanScore = 0, computerScore = 0;
 
-
-function playGame(){
-    let rounds=0, humanScore=0, computerScore=0;
-    while(rounds<5){
-        playRound();
-        rounds++;
+    function updateScores() {
+        document.querySelector("h3.human-status").textContent = `Human score: ${humanScore}`;
+        document.querySelector("h3.computer-status").textContent = `Computer score: ${computerScore}`;
+        document.querySelector("h4.rounds").textContent = `Rounds: ${rounds}`;
     }
 
-    let finalDecision = humanScore > computerScore ? "You won!" : humanScore === computerScore ? "It's a draw!" : "Computer won!";
-    console.log(`Final Score - Human: ${humanScore}, Computer: ${computerScore}. ${finalDecision}`);
+    function printFinalMessage() {
+        let finalDecision = humanScore > computerScore ? "You won!" : humanScore === computerScore ? "It's a draw!" : "Computer won!";
+        document.querySelector("h2.final-decision").textContent = finalDecision;
+    }
 
-    function playRound(){
-        let computerChoice=getComputerChoice();
-        let humanChoice=getHumanChoice();
-        let decision=determineWinner(humanChoice, computerChoice);
-
-        if(decision===1){
+    function playRound(humanChoice, computerChoice) {
+        let decision = determineWinner(humanChoice, computerChoice);
+        if (decision === 1) {
             humanScore++;
-            createMessage(humanChoice, computerChoice, decision);
-        }
-        else if(decision===-1){
+            printMessage(humanChoice, computerChoice, decision);
+        } else if (decision === -1) {
             computerScore++;
-            createMessage(computerChoice, humanChoice, decision);
+            printMessage(computerChoice, humanChoice, decision);
+        } else {
+            printMessage(humanChoice, computerChoice, decision);
         }
-        else
-            createMessage(humanChoice, computerChoice, decision);
-        
+        rounds++;
+        updateScores();
+        if (rounds === 5) {
+            printFinalMessage();
+            document.querySelectorAll("button.option").forEach(option => {
+                option.removeEventListener('click', handleOptionClick);
+            });
+        }
     }
+
+    function handleOptionClick(e) {
+        playRound(e.currentTarget.getAttribute("id"), getComputerChoice());
+    }
+
+    document.querySelectorAll("button.option").forEach(option => {
+        option.addEventListener('click', handleOptionClick);
+    });
+
+    updateScores();
+    document.querySelector("h3.decision").textContent = "";
+    document.querySelector("h2.final-decision").textContent = "";
 }
 
-playGame();
+
+document.querySelector("button.game").addEventListener('click', () => {
+    playGame();
+});
